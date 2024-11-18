@@ -1,6 +1,8 @@
 # Setting up GitHub on turing/hopper 
 
 ## 1. Generate and Add SSH Key
+Run the following commands on turing/hopper servers:
+
 Run command:
 
 ssh-keygen -t ed25519 -C "your@email.com"
