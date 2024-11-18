@@ -5,7 +5,7 @@ Run the following commands on turing/hopper servers:
 
 Run command:
 
-ssh-keygen -t ed25519 -C "your@email.com"
+ssh-keygen -t ed25519 -C "your@githubemail.com"
   - when prompted for location, just press enter to keep default location
   - when prompted for password, add any password you want
 
@@ -24,14 +24,15 @@ Otherwise:
 
 Add SSH Key:
 - Create a New SSH Key
-- Run command: cat ~/.ssh/id_ed25519.pub
+- Run command: `cat ~/.ssh/id_ed25519.pub`
 - Copy the output and paste it into the Key field on the GitHub website
 - On the website, give the Key a name and make sure authentication is selected
 - And then add it to your profile!
 
 ## 3. Clone Karaoke Database
 - Go into public_html
-- git clone git@github.com:{username}/karaoke-database.git
+- git clone `git@github.com:{username}/karaoke-database.git`
+  - **REPLACE {username} WITH YOUR GITHUB USERNAME** 
 - cd karaoke-database
 
 ## 4. Start coding!
@@ -40,7 +41,7 @@ Add SSH Key:
 
 - To access PHP file(s) on department server:
 
-  https://students.cs.niu.edu/~{z-id}/karaoke-database/{filename}.php
+  `https://students.cs.niu.edu/~{z-id}/karaoke-database/{filename}.php`
   - Fill in z-id with your z-id
   - Fill in filename with the file name you want
 
