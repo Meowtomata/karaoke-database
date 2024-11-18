@@ -22,9 +22,9 @@ Otherwise:
 
 Add SSH Key:
 - Create a New SSH Key
-- cat ~/.ssh/id_ed25519.pub
-- Copy output and paste in public key
-- Give it a Name and make sure authentication is selected
+- Run command: cat ~/.ssh/id_ed25519.pub
+- Copy the output and paste it into the Key field on the GitHub website
+- On the website, give the Key a name and make sure authentication is selected
 - And then add it to your profile!
 
 ## 3. Clone Karaoke Database
