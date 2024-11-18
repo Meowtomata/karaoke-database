@@ -31,8 +31,7 @@ Add SSH Key:
 
 ## 3. Clone Karaoke Database
 - Go into public_html
-- git clone `git@github.com:{username}/karaoke-database.git`
-  - **REPLACE {username} WITH YOUR GITHUB USERNAME** 
+- git clone git@github.com:Meowtomata/karaoke-database.git
 - cd karaoke-database
 
 ## 4. Start coding!
