@@ -4,9 +4,9 @@ include 'password.php'
 
 
 <?php
-function setupPDO($username, $password) {
+function setupPDO($username, $password, $dbname) {
     try {
-        $dsn = "mysql:host=courses;dbname=z2047125";
+        $dsn = "mysql:host=courses;dbname=$dbname";
         $pdo = new PDO($dsn, $username, $password);
     }
     catch (PDOexception $e) {
@@ -23,5 +23,5 @@ function setupPDO($username, $password) {
 
 
 <?php
-setupPDO($username, $password);
+setupPDO($username, $password, $dbname);
 ?>
