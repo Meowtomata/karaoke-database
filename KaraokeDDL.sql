@@ -15,22 +15,21 @@ CREATE TABLE user (
     user_id VARCHAR(255) PRIMARY KEY
 );
 
-CREATE TABLE song (
-    song_id INT AUTO_INCREMENT PRIMARY KEY,
-    song_title VARCHAR(255) NOT NULL
-);
-
 CREATE TABLE karaoke_file (
     file_id INT AUTO_INCREMENT PRIMARY KEY,
-    song_id INT,
-    variant VARCHAR(10) DEFAULT 'SOLO', -- version was reserved keyword 
-    FOREIGN KEY (song_id) REFERENCES song (song_id)
+    variant VARCHAR(10) DEFAULT 'SOLO' -- version was reserved keyword 
 );
 
+CREATE TABLE song (
+    song_id INT AUTO_INCREMENT PRIMARY KEY,
+    song_title VARCHAR(255) NOT NULL,
+    karaoke_file_id INT,
+    FOREIGN KEY (karaoke_file_id) REFERENCES karaoke_file (file_id)
+);
+
+
 CREATE TABLE role (
-    role_name VARCHAR(50) PRIMARY KEY,
-    song_id INT,
-    FOREIGN KEY (song_id) REFERENCES song (song_id)
+    role_name VARCHAR(50) PRIMARY KEY
 );
 
 CREATE TABLE contributor (
