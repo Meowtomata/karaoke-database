@@ -17,11 +17,13 @@ function setupPDO($username, $password, $dbname) {
     // pdo will throw exceptions when error encountered
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
+    return $pdo;
+
     echo "Succesfully connected to database.";
 }
 ?>
 
 
 <?php
-setupPDO($username, $password, $dbname);
+$pdo = setupPDO($username, $password, $dbname);
 ?>
