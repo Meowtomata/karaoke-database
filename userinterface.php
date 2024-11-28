@@ -1,4 +1,3 @@
-
 <?php
 include 'password.php'
 ?>
@@ -18,7 +17,47 @@ function setupPDO($username, $password, $dbname) {
     // pdo will throw exceptions when error encountered
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    echo "Succesfully connected to database.";
+
+    return $pdo;
+}
+?>
+
+
+<?php
+$pdo = setupPDO($username, $password, $dbname);
+?>
+
+
+<?php
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $userID = $_POST['userID'];
+    $queueType = $_POST['queuetype'];
+    $searchParam = '%' . ($_POST['search'] ?? '') . '%';
+    $paymentAmount = $_POST['paymentAmount'] ?? 0;
+
+    try {
+        if (!isset($pdo)) {
+            throw new Exception("Database connection failed. Please check setupPDO().");
+        }
+
+        $checkUserQuery = $pdo->prepare("INSERT IGNORE INTO user (user_id) VALUES (:userID)");
+        $checkUserQuery->execute([':userID' => $userID]);
+
+        $getAllSongsQuery = $pdo->prepare(
+            "SELECT s.song_title, sd.role_name, c.contributor_name 
+             FROM song s
+             JOIN song_data sd ON s.song_id = sd.song_id
+             JOIN contributor c ON sd.contributor_name = c.contributor_name
+             WHERE s.song_title LIKE :search OR c.contributor_name LIKE :search
+             ORDER BY s.song_title, sd.role_name"
+        );
+        $getAllSongsQuery->execute([':search' => $searchParam]);
+        $songs = $getAllSongsQuery->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        echo "Database error: " . $e->getMessage();
+    } catch (Exception $e) {
+        echo "Error: " . $e->getMessage();
+    }
 }
 ?>
 
@@ -110,6 +149,21 @@ function setupPDO($username, $password, $dbname) {
         <input type="text" id="word" name="search" placeholder="Enter a Song or Artist">
         <br><br>
 
+        <?php if (isset($songs)): ?>
+<div id="results">
+    <h2>All Songs</h2>
+    <select>
+        <option value="" disabled selected>Select a song</option>
+        <?php foreach ($songs as $song): ?>
+            <option>
+                <?php echo htmlspecialchars($song['song_title']) . ": " . htmlspecialchars($song['role_name']) . " - " . htmlspecialchars($song['contributor_name']); ?>
+            </option>
+        <?php endforeach; ?>
+    </select>
+</div>
+<?php endif; ?>
+<br>
+
         <label>Queue Choice:</label><br>
             <div class="form-group">
             <input type="radio" id="queue" name="queuetype" value="queue"
@@ -150,6 +204,8 @@ function setupPDO($username, $password, $dbname) {
 
         <button type="submit">Submit</button>
     </form>
+
+
 </body>
 </html>
 
