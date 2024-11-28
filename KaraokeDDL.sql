@@ -7,26 +7,25 @@ DROP TABLE IF EXISTS queue;
 DROP TABLE IF EXISTS contributor;
 DROP TABLE IF EXISTS role;
 DROP TABLE IF EXISTS user;
-DROP TABLE IF EXISTS song;
 DROP TABLE IF EXISTS karaoke_file;
+DROP TABLE IF EXISTS song;
 
 -- Create tables
 CREATE TABLE user (
     user_id VARCHAR(255) PRIMARY KEY
 );
 
-CREATE TABLE karaoke_file (
-    file_id INT AUTO_INCREMENT PRIMARY KEY,
-    variant VARCHAR(10) DEFAULT 'SOLO' -- version was reserved keyword 
-);
-
 CREATE TABLE song (
     song_id INT AUTO_INCREMENT PRIMARY KEY,
-    song_title VARCHAR(255) NOT NULL,
-    karaoke_file_id INT,
-    FOREIGN KEY (karaoke_file_id) REFERENCES karaoke_file (file_id)
+    song_title VARCHAR(255) NOT NULL
 );
 
+CREATE TABLE karaoke_file (
+    file_id INT AUTO_INCREMENT PRIMARY KEY,
+    version VARCHAR(10) DEFAULT 'SOLO',
+    song_id INT NOT NULL,
+    FOREIGN KEY (song_id) REFERENCES song (song_id)
+);
 
 CREATE TABLE role (
     role_name VARCHAR(50) PRIMARY KEY
@@ -74,3 +73,42 @@ CREATE TABLE queue_info (
     FOREIGN KEY (song_id) REFERENCES song (song_id),
     FOREIGN KEY (user_id) REFERENCES user (user_id)
 );
+
+-- Instance Data
+
+
+-- Inserting Songs
+INSERT INTO song (song_title)
+    VALUES
+    ("squabble up"),
+    ("luther (with sza)");
+
+-- Inserting Roles
+INSERT INTO role (role_name)
+    VALUES
+    ("Artist"),
+    ("Featured Artist");
+
+-- Inserting Contributor Names
+INSERT INTO contributor (contributor_name)
+    VALUES
+    ("Kendrick Lamar"),
+    ("SZA");
+
+-- Associating Songs With Roles and Contributors
+INSERT INTO song_data (song_id, role_name, contributor_name)
+    VALUES
+    (1, "Artist", "Kendrick Lamar"), -- squabble up
+    (2, "Artist", "Kendrick Lamar"), -- luther (with sza)
+    (2, "Featured Artist", "SZA");   -- luther (with sza)
+
+
+-- Inserting Karaoke Files
+INSERT INTO karaoke_file (version, song_id)
+    VALUES
+    ("Solo", 1), -- squabble up
+    ("Solo", 2), -- luther (with sza)
+    ("Duet", 2); -- luther (with sza)
+
+
+
