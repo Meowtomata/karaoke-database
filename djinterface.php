@@ -109,7 +109,7 @@ catch (PDOexception $e) {
                 <?php foreach ($priorityQueue as $entry): ?>
                     <div class="song-box">
                         <p><strong>Username:</strong> <?= htmlspecialchars($entry['user_id']) ?></p>
-                        <p><strong>Song:</strong> <?= htmlspecialchars($entry['song_title']) ?></p>
+                        <p><strong>Song:</strong> <?= htmlspecialchars($entry['song_id']) ?></p>
                         <p><strong>Submitted At:</strong> <?= htmlspecialchars($entry['time_stamp']) ?></p>
                         <p><strong>Payment:</strong> $<?= htmlspecialchars($entry['payment']) ?></p>
                     </div>
@@ -126,7 +126,7 @@ catch (PDOexception $e) {
                 <?php foreach ($regularQueue as $entry): ?>
                     <div class="song-box">
                         <p><strong>Username:</strong> <?= htmlspecialchars($entry['user_id']) ?></p>
-                        <p><strong>Song:</strong> <?= htmlspecialchars($entry['song_title']) ?></p>
+                        <p><strong>Song:</strong> <?= htmlspecialchars($entry['song_id']) ?></p>
                         <p><strong>Submitted At:</strong> <?= htmlspecialchars($entry['time_stamp']) ?></p>
                     </div>
                 <?php endforeach; ?>
