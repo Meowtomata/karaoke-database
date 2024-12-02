@@ -32,5 +32,5 @@ INSERT INTO karaoke_file (version, song_id)
 -- Insert 5 Priority Queue & 5 Normal Queue Items
 INSERT INTO queue_info (song_id, time_stamp, user_id, payment)
     VALUES
-    (1, '2023-10-05 14:30:00', 'Meowster', 0),
+    (1, '2023-10-05 14:30:00', 'Meowster', NULL),
     (2, '2024-10-03 15:34:22', 'Dingus', 100);
