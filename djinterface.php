@@ -1,9 +1,7 @@
 <?php
 include 'password.php';
 ?>
-<?php
-header("Refresh: 5;url='djinterface.php'");
-?>
+
 <?php
 function setupPDO($username, $password, $dbname) {
     try {
@@ -50,7 +48,6 @@ $priorityQueue = $pdo->query("
 <head>
 
     <title>DJ Interface - Karaoke.com</title>
-    <meta http-equiv="refresh" content="5;URL='djinterface.php'">
 
     <style>
         body {
