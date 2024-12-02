@@ -1,6 +1,6 @@
 <?php
 include 'password.php';
-?>
+?> 
 
 <?php
 function setupPDO($username, $password, $dbname) {
@@ -23,22 +23,21 @@ $pdo = setupPDO($username, $password, $dbname);
 
 // Fetch regular queue
 $regularQueue = $pdo->query("
-    SELECT q.queue_id, u.user_id, s.song_title, qinfo.time_stamp 
+    SELECT qinfo.time_stamp, u.user_id, s.song_title, 
     FROM queue_info qinfo 
-    JOIN queue q ON q.queue_id = qinfo.queue_id 
     JOIN user u ON qinfo.user_id = u.user_id 
     JOIN song s ON qinfo.song_id = s.song_id 
-    WHERE q.queue_id NOT IN (SELECT queue_id FROM priority_queue)
+    WHERE qinfo.payment IS NULL
     ORDER BY qinfo.time_stamp ASC
 ")->fetchAll(PDO::FETCH_ASSOC);
 
 // Fetch priority queue
 $priorityQueue = $pdo->query("
-    SELECT pq.queue_id, u.user_id, s.song_title, qinfo.time_stamp, pq.payment 
+    SELECT qinfo.time_stamp, u.user_id, s.song_title, qinfo.payment 
     FROM queue_info qinfo 
-    JOIN priority_queue pq ON qinfo.queue_id = pq.queue_id 
     JOIN user u ON qinfo.user_id = u.user_id 
     JOIN song s ON qinfo.song_id = s.song_id 
+    WHERE qinfo.payment IS NOT NULL
     ORDER BY qinfo.time_stamp ASC
 ")->fetchAll(PDO::FETCH_ASSOC);
 ?>
