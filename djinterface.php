@@ -1,5 +1,5 @@
 <?php
-include 'password.php'
+include 'password.php';
 ?>
 
 <?php
@@ -19,8 +19,7 @@ function setupPDO($username, $password, $dbname) {
 }
 ?>
 <?php
-include 'connection.php';
-$pdo = getPDOConnection();
+$pdo = setupPDO($username, $password, $dbname);
 
 // Fetch regular queue
 $regularQueue = $pdo->query("
