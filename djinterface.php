@@ -22,24 +22,29 @@ function setupPDO($username, $password, $dbname) {
 $pdo = setupPDO($username, $password, $dbname);
 
 // Fetch regular queue
-$regularQueue = $pdo->query("
-    SELECT qinfo.time_stamp, u.user_id, s.song_title, 
-    FROM queue_info qinfo 
-    JOIN user u ON qinfo.user_id = u.user_id 
-    JOIN song s ON qinfo.song_id = s.song_id 
-    WHERE qinfo.payment IS NULL
-    ORDER BY qinfo.time_stamp ASC
-")->fetchAll(PDO::FETCH_ASSOC);
-
+try {
+    $regularQueue = $pdo->query("
+        SELECT * FROM queue_info
+        WHERE payment IS NULL;
+        ORDER BY qinfo.time_stamp ASC
+    ")->fetchAll(PDO::FETCH_ASSOC);
+}
+catch (PDOexception $e) {
+    echo $e->getMessage();
+    return;
+}
 // Fetch priority queue
-$priorityQueue = $pdo->query("
-    SELECT qinfo.time_stamp, u.user_id, s.song_title, qinfo.payment 
-    FROM queue_info qinfo 
-    JOIN user u ON qinfo.user_id = u.user_id 
-    JOIN song s ON qinfo.song_id = s.song_id 
-    WHERE qinfo.payment IS NOT NULL
-    ORDER BY qinfo.time_stamp ASC
-")->fetchAll(PDO::FETCH_ASSOC);
+try {
+    $priorityQueue = $pdo->query("
+        SELECT * FROM queue_info
+        WHERE payment IS NOT NULL
+        ORDER BY time_stamp ASC
+    ")->fetchAll(PDO::FETCH_ASSOC);
+}
+catch (PDOexception $e) {
+    echo $e->getMessage();
+    return;
+}
 ?>
 
 <!DOCTYPE html>
