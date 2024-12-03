@@ -24,7 +24,10 @@ $pdo = setupPDO($username, $password, $dbname);
 // Fetch regular queue
 try {
     $regularQueue = $pdo->query("
-        SELECT * FROM queue_info
+        SELECT qinfo.*, song.song_title, karaoke_file.version
+        FROM queue_info qinfo
+        JOIN song ON qinfo.song_id = song.song_id
+        JOIN karaoke_file ON song.song_id = karaoke_file.song_id
         WHERE payment IS NULL;
         ORDER BY qinfo.time_stamp ASC
     ")->fetchAll(PDO::FETCH_ASSOC);
@@ -36,9 +39,12 @@ catch (PDOexception $e) {
 // Fetch priority queue
 try {
     $priorityQueue = $pdo->query("
-        SELECT * FROM queue_info
-        WHERE payment IS NOT NULL
-        ORDER BY time_stamp ASC
+        SELECT qinfo.*, song.song_title, karaoke_file.version
+        FROM queue_info qinfo
+        JOIN song ON qinfo.song_id = song.song_id
+        JOIN karaoke_file ON song.song_id = karaoke_file.song_id
+        WHERE payment IS NOT NULL;
+        ORDER BY qinfo.time_stamp ASC
     ")->fetchAll(PDO::FETCH_ASSOC);
 }
 catch (PDOexception $e) {
@@ -109,7 +115,8 @@ catch (PDOexception $e) {
                 <?php foreach ($priorityQueue as $entry): ?>
                     <div class="song-box">
                         <p><strong>Username:</strong> <?= htmlspecialchars($entry['user_id']) ?></p>
-                        <p><strong>Song:</strong> <?= htmlspecialchars($entry['song_id']) ?></p>
+                        <p><strong>Song:</strong> <?= htmlspecialchars($entry['song_title']) ?></p>
+                        <p><strong>Karaoke Version:</strong> <?= htmlspecialchars($entry['version']) ?></p>
                         <p><strong>Submitted At:</strong> <?= htmlspecialchars($entry['time_stamp']) ?></p>
                         <p><strong>Payment:</strong> $<?= htmlspecialchars($entry['payment']) ?></p>
                     </div>
@@ -126,7 +133,8 @@ catch (PDOexception $e) {
                 <?php foreach ($regularQueue as $entry): ?>
                     <div class="song-box">
                         <p><strong>Username:</strong> <?= htmlspecialchars($entry['user_id']) ?></p>
-                        <p><strong>Song:</strong> <?= htmlspecialchars($entry['song_id']) ?></p>
+                        <p><strong>Song:</strong> <?= htmlspecialchars($entry['song_title']) ?></p>
+                        <p><strong>Karaoke Version:</strong> <?= htmlspecialchars($entry['version']) ?></p>
                         <p><strong>Submitted At:</strong> <?= htmlspecialchars($entry['time_stamp']) ?></p>
                     </div>
                 <?php endforeach; ?>
