@@ -44,6 +44,6 @@ INSERT INTO karaoke_file (version, song_id)
 INSERT INTO queue_info (song_id, time_stamp, user_id, payment)
     VALUES
     (1, '2023-10-05 14:30:00', 'Meowster', NULL),
-    (2, '2024-10-03 15:34:22', 'Dingus', 100);
+    (2, '2024-10-03 15:34:22', 'Dingus', 100),
     (3, '2024-10-06 16:38:22', 'arnold', 30000);
 
