@@ -36,7 +36,9 @@ catch (PDOexception $e) {
 // Fetch priority queue
 try {
     $priorityQueue = $pdo->query("
-        SELECT * FROM queue_info
+        SELECT queue_info.*, song.song_title
+        FROM queue_info
+        JOIN song ON queue_info.song_id = song.song_id
         WHERE payment IS NOT NULL
         ORDER BY time_stamp ASC
     ")->fetchAll(PDO::FETCH_ASSOC);
