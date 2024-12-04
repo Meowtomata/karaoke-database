@@ -1,5 +1,6 @@
 <?php
 include 'password.php';
+session_start();
 ?> 
 
 <?php
@@ -53,17 +54,27 @@ catch (PDOexception $e) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+
+    // Check if an entry in the queue has been pressed to deqeue
     if (isset($_POST['submit-queue'])) {
+
+
+        // SQL Statement to remove song from queue
         $deleteQueue = $pdo->prepare(
             "DELETE FROM queue_info WHERE time_stamp = ? AND karaoke_file_id = ? AND user_id = ?");
 
+        // Get value from button to decide which button to remove
         $primary_key = explode(",", $_POST["submit-queue"]);
         $time_stamp = $primary_key[0];
         $user_id = $primary_key[1];
         $karaoke_file_id = $primary_key[2];
         
         try {
+            // Remove song entry from queue
             $deleteQueue->execute(array($time_stamp, $karaoke_file_id, $user_id));
+            // Immediately refresh the page to see results
+           $_SESSION['current-song'] = $primary_key[3]; 
+           $_SESSION['user-id'] = $primary_key[1];
             header("Refresh: 0");
         }
         catch (PDOexception $e) {
@@ -132,6 +143,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 </head>
 <body>
     <h1>DJ Interface - Karaoke</h1>
+    <?php
+    // Show the current song playing popped from queue
+    if (isset($_SESSION['current-song']) && isset($_SESSION['user-id']))
+    {
+        echo "Current song playing: " . $_SESSION['current-song'] . ", Requested
+            by: " . $_SESSION['user-id'];
+    }
+    ?>
+
 
     <div class="queue-wrapper">
         <!-- Priority Queue -->
@@ -140,13 +160,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <h2>Priority Queue</h2>
             <?php if (!empty($priorityQueue)): ?>
                 <?php foreach ($priorityQueue as $entry): ?>
+                    <!-- Store information to button to dequeue later -->
                     <?php
                     $timestamp = $entry['time_stamp'];
                     $user_id = $entry['user_id'];
                     $version = $entry['karaoke_file_id'];
+                    $title = $entry['song_title'];
                     echo "
                     <button type='submit' name='submit-queue'
-                    value='$timestamp,$user_id,$version' class='song-box'>";
+                    value='$timestamp,$user_id,$version,$title' class='song-box'>";
                     ?>
                         <p><strong>Username:</strong> <?= htmlspecialchars($entry['user_id']) ?></p>
                         <p><strong>Song:</strong> <?= htmlspecialchars($entry['song_title']) ?></p>
@@ -168,14 +190,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <h2>Regular Queue</h2>
             <?php if (!empty($regularQueue)): ?>
                 <?php foreach ($regularQueue as $entry): ?>
+                    <!-- Store information to button to dequeue later -->
                     <?php
                     $timestamp = $entry['time_stamp'];
                     $user_id = $entry['user_id'];
                     $version = $entry['karaoke_file_id'];
+                    $title = $entry['song_title'];
                     echo "
                     <button type='submit' name='submit-queue'
-                    value='$timestamp,$user_id,$version' class='song-box'>";
-                    ?>
+                    value='$timestamp,$user_id,$version,$title' class='song-box'>";
+ 
+                   ?>
                         <p><strong>Username:</strong> <?= htmlspecialchars($entry['user_id']) ?></p>
                         <p><strong>Song:</strong> <?= htmlspecialchars($entry['song_title']) ?></p>
                         <p><strong>Karaoke Version:</strong> <?= htmlspecialchars($entry['version']) ?></p>
