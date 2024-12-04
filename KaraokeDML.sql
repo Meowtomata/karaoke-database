@@ -46,7 +46,7 @@ INSERT INTO contributor (contributor_name)
     ("Billie Eilish"),
     ("lefty gunplay"),
     ("Charles Berthoud"),
-    ("mobbu")
+    ("mobbu"),
     ("Mariah Carey"),
     ("Glass Animals"),
     ("Harry Styles"),
