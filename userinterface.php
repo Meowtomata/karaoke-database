@@ -27,7 +27,6 @@ function setupPDO($username, $password, $dbname) {
 }
 ?>
 
-
 <?php
 $pdo = setupPDO($username, $password, $dbname);
 ?>
@@ -38,17 +37,18 @@ if (isset($_GET['search'])) {
     $searchQuery = $_GET['search'];
 
     $getSongsQuery = $pdo->prepare(
-        "SELECT s.song_id, s.song_title, sd.role_name, c.contributor_name
-         FROM song s
-         JOIN song_data sd ON s.song_id = sd.song_id
-         JOIN contributor c ON sd.contributor_name = c.contributor_name
-         WHERE LOWER(s.song_title) LIKE :search
-         OR LOWER(c.contributor_name) LIKE :search
-         ORDER BY s.song_title, sd.role_name"
-    );
-    $getSongsQuery->bindValue(':search', '%' . strtolower($searchQuery) . '%');  // Ensure lowercase comparison
-    $getSongsQuery->execute();
+        "SELECT s.song_id, s.song_title, sd.role_name, c.contributor_name, kf.file_id, kf.version
+        FROM song s
+        JOIN song_data sd ON s.song_id = sd.song_id
+        JOIN contributor c ON sd.contributor_name = c.contributor_name
+        LEFT JOIN karaoke_file kf ON s.song_id = kf.song_id  -- Use LEFT JOIN to include songs without karaoke files
+        WHERE LOWER(s.song_title) LIKE :search
+        OR LOWER(c.contributor_name) LIKE :search
+        ORDER BY s.song_title, sd.role_name, kf.version"
 
+    );
+    $getSongsQuery->bindValue(':search', '%' . strtolower($searchQuery) . '%');
+    $getSongsQuery->execute();
     $songs = $getSongsQuery->fetchAll(PDO::FETCH_ASSOC);
 
     header('Content-Type: application/json');
@@ -56,37 +56,36 @@ if (isset($_GET['search'])) {
     exit();
 } else {
     $getSongsQuery = $pdo->query(
-        "SELECT s.song_id, s.song_title, sd.role_name, c.contributor_name
+        "SELECT s.song_id, s.song_title, sd.role_name, c.contributor_name, kf.file_id, kf.version
          FROM song s
          JOIN song_data sd ON s.song_id = sd.song_id
          JOIN contributor c ON sd.contributor_name = c.contributor_name
-         ORDER BY s.song_title, sd.role_name"
+         JOIN karaoke_file kf ON s.song_id = kf.song_id
+         ORDER BY s.song_title, sd.role_name, kf.version"
     );
-
     $songs = $getSongsQuery->fetchAll(PDO::FETCH_ASSOC);
 }
 ?>
 
 
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Karaoke.com</title>
+ <!DOCTYPE html>
+ <html>
+ <head>
+     <title>Karaoke.com</title>
 
-    <style>
-        body{
-            font-family: Arial, sans-serif;
-            background-color: white;
-            margin: 0;
-            padding: 0;
-        }
-        h1{
-            background-color: #9fd8e3;
-            color: white;
-            text-align: center;
-        }
-        form{
-            background-color: white;
+     <style>
+         body{
+             font-family: Arial, sans-serif;
+             background-color: white;
+             margin: 0;
+             padding: 0;
+         }
+         h1{
+             background-color: #9fd8e3;
+             color: white;
+             text-align: center;
+         }
+         form{ background-color: white;
             margin: 30px auto;
             padding: 20px;
             border-radius: 20px;
@@ -134,63 +133,60 @@ if (isset($_GET['search'])) {
 
 </head>
 <body>
-
 <?php
-    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        $userID = $_POST['userID'] ?? '';
-        $song = $_POST['song'] ?? '';
-        $queuetype = $_POST['queuetype'] ?? 'queue';
-        $paymentAmount = isset($_POST['paymentAmount']) ? floatval($_POST['paymentAmount']) : 0;
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $userID = $_POST['userID'] ?? '';
+    $fileID = $_POST['file'] ?? '';
+    $queuetype = $_POST['queuetype'] ?? 'queue';
+    $paymentAmount = isset($_POST['paymentAmount']) ? floatval($_POST['paymentAmount']) : 0;
 
-        if ($paymentAmount == 0 || empty($paymentAmount)) {
-            $queuetype = 'queue';
-        }
-
-        if ($queuetype === 'priority' && $paymentAmount < 5) {
-            $queuetype = 'queue';
-        }
-
-        if (empty($userID) || empty($song)) {
-            echo "<script>alert('Please provide a username and song choice.');</script>";
-        } else {
-            $checkSongQuery = $pdo->prepare("SELECT song_id FROM song WHERE song_id = :song_id");
-            $checkSongQuery->execute([':song_id' => $song]);
-
-            if ($checkSongQuery->rowCount() == 0) {
-                echo "<script>alert('Song ID does not exist!');</script>";
-            } else {
-                $timestamp = date('Y-m-d H:i:s');
-
-                if ($queuetype === 'priority' && $paymentAmount >= 5) {
-                    $insertIntoQueue = $pdo->prepare(
-                        "INSERT INTO queue_info(song_id, time_stamp, user_id, payment)
-                         VALUES (:song_id, :time_stamp, :user_id, :payment)"
-                    );
-                    $insertIntoQueue->execute([
-                        ':song_id' => (int)$song,
-                        ':time_stamp' => $timestamp,
-                        ':user_id' => $userID,
-                        ':payment' => $paymentAmount
-                    ]);
-                } else {
-                    $insertIntoQueue = $pdo->prepare(
-                        "INSERT INTO queue_info (song_id, time_stamp, user_id)
-                         VALUES (:song_id, :time_stamp, :user_id)"
-                    );
-                    $insertIntoQueue->execute([
-                        ':song_id' => (int)$song,
-                        ':time_stamp' => $timestamp,
-                        ':user_id' => $userID
-                    ]);
-                    $paymentDisplay = "";
-                }
-                echo "<script>alert('Song added to the queue!');</script>";
-
-            }
-        }
+    if ($paymentAmount == 0 || empty($paymentAmount)) {
+        $queuetype = 'queue';
     }
 
+    if (empty($userID) || empty($fileID)) {
+        echo "<script>alert('Please provide a username and song choice.');</script>";
+    } else {
+        $checkFileQuery = $pdo->prepare("SELECT song_id FROM karaoke_file WHERE file_id = :file_id");
+        $checkFileQuery->execute([':file_id' => $fileID]);
+        $song = $checkFileQuery->fetch(PDO::FETCH_ASSOC);
+
+        if (!$song) {
+            echo "<script>alert('Selected song version does not exist!');</script>";
+        } else {
+            $songID = $song['song_id'];
+            $timestamp = date('Y-m-d H:i:s');
+
+            if ($queuetype === 'priority' && $paymentAmount >= 5) {
+                $insertIntoQueue = $pdo->prepare(
+                    "INSERT INTO queue_info (karaoke_file_id, time_stamp, user_id, payment)
+                     VALUES (:karaoke_file_id, :time_stamp, :user_id, :payment)"
+                );
+                $insertIntoQueue->execute([
+                    ':karaoke_file_id' => (int)$fileID,
+                    ':time_stamp' => $timestamp,
+                    ':user_id' => $userID,
+                    ':payment' => $paymentAmount
+                ]);
+            } else {
+                $insertIntoQueue = $pdo->prepare(
+                    "INSERT INTO queue_info (karaoke_file_id, time_stamp, user_id)
+                     VALUES (:karaoke_file_id, :time_stamp, :user_id)"
+                );
+                $insertIntoQueue->execute([
+                    ':karaoke_file_id' => (int)$fileID,
+                    ':time_stamp' => $timestamp,
+                    ':user_id' => $userID
+                ]);
+            }
+            echo "<script>alert('Song added to the queue!');</script>";
+        }
+    }
+}
+
+
 ?>
+
 
 <h1>Welcome to Karaoke</h1>
 
@@ -202,16 +198,16 @@ if (isset($_GET['search'])) {
     <input type="text" id="word" oninput="searchSongs()" name="search" placeholder="Enter a Song or Artist"><br><br>
 
     <div id="results">
-    <h2>All Songs</h2>
-    <select name="song" id="songSelect">
-        <option value="">Select a song</option>
-        <?php foreach ($songs as $song): ?>
-            <option value="<?= htmlspecialchars($song['song_id']) ?>">
-                <?= htmlspecialchars($song['song_title'] . ": " . $song['role_name'] . " - " . $song['contributor_name']) ?>
-            </option>
-        <?php endforeach; ?>
-    </select>
-</div><br><br>
+        <h2>All Songs</h2>
+        <select name="file" id="songSelect">
+            <option value="">Select a song </option>
+            <?php foreach ($songs as $song): ?>
+                <option value="<?= htmlspecialchars($song['file_id']) ?>">
+                    <?= htmlspecialchars($song['song_title'] . ": " . $song['role_name'] . " - " . $song['contributor_name'] . " [" . $song['version'] . "]") ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+    </div><br><br>
 
     <label>Queue Choice:</label><br>
     <div class="form-group">
@@ -245,7 +241,7 @@ function searchSongs() {
                 if (songs.length > 0) {
                     songs.forEach(song => {
                         const option = document.createElement('option');
-                        option.value = song.song_id;
+                        option.value = song.file_id;
                         option.textContent = `${song.song_title}: ${song.role_name} - ${song.contributor_name}`;
                         songSelect.appendChild(option);
                     });
