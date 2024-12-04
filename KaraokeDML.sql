@@ -34,7 +34,7 @@ INSERT INTO song (song_title)
     ("War of Change"),
     ("PvP"),
     ("Basket Case"),
-    ("American Idiot);
+    ("American Idiot");
 
 
 -- Inserting Contributor Names
