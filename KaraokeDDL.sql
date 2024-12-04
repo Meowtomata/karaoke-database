@@ -39,11 +39,11 @@ CREATE TABLE song_data (
 
 
 CREATE TABLE queue_info (
-    song_id INT,
+    karaoke_file_id INT,
     user_id VARCHAR(255),
     time_stamp DATETIME,
     payment INT,
-    PRIMARY KEY (song_id, time_stamp),
-    FOREIGN KEY (song_id) REFERENCES song (song_id)
+    PRIMARY KEY (karaoke_file_id, time_stamp),
+    FOREIGN KEY (karaoke_file_id) REFERENCES karaoke_file (file_id)
 );
 
