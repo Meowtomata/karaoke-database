@@ -172,7 +172,6 @@ if (isset($_GET['search'])) {
                         ':user_id' => $userID,
                         ':payment' => $paymentAmount
                     ]);
-                    $paymentDisplay = "$" . number_format($paymentAmount, 2); // Show actual payment for priority
                 } else {
                     $insertIntoQueue = $pdo->prepare(
                         "INSERT INTO queue_info (song_id, time_stamp, user_id)
