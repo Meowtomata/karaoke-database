@@ -29,7 +29,7 @@ INSERT INTO song (song_title)
     ("Good 4 U"),
     ("Drivers License"),
     ("Dance Monkey"),
-    ("Power Of The Beast",
+    ("Power Of The Beast"),
     ("The Reckoning"),
     ("War of Change"),
     ("PvP"),
