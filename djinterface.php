@@ -24,12 +24,13 @@ $pdo = setupPDO($username, $password, $dbname);
 // Fetch regular queue
 try {
     $regularQueue = $pdo->query("
-        SELECT * FROM queue_info 
+        SELECT queue_info.*, karaoke_file.version, song.song_title 
+        FROM queue_info
         JOIN karaoke_file ON queue_info.karaoke_file_id = karaoke_file.file_id
         JOIN song ON song.song_id = karaoke_file.song_id
-        WHERE payment IS NOT NULL;
+        WHERE payment IS NULL
         ORDER BY queue_info.time_stamp ASC
-     ")->fetchAll(PDO::FETCH_ASSOC);
+    ")->fetchAll(PDO::FETCH_ASSOC);
 }
 catch (PDOexception $e) {
     echo $e->getMessage();
@@ -38,16 +39,37 @@ catch (PDOexception $e) {
 // Fetch priority queue
 try {
     $priorityQueue = $pdo->query("
-        SELECT * FROM queue_info 
+        SELECT queue_info.*, karaoke_file.version, song.song_title 
+        FROM queue_info
         JOIN karaoke_file ON queue_info.karaoke_file_id = karaoke_file.file_id
         JOIN song ON song.song_id = karaoke_file.song_id
-        WHERE payment IS NOT NULL;
+        WHERE payment IS NOT NULL
         ORDER BY queue_info.time_stamp ASC
     ")->fetchAll(PDO::FETCH_ASSOC);
 }
 catch (PDOexception $e) {
     echo $e->getMessage();
     return;
+}
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    if (isset($_POST['submit-queue'])) {
+        $deleteQueue = $pdo->prepare(
+            "DELETE FROM queue_info WHERE time_stamp = ? AND karaoke_file_id = ? AND user_id = ?");
+
+        $primary_key = explode(",", $_POST["submit-queue"]);
+        $time_stamp = $primary_key[0];
+        $user_id = $primary_key[1];
+        $karaoke_file_id = $primary_key[2];
+        
+        try {
+            $deleteQueue->execute(array($time_stamp, $karaoke_file_id, $user_id));
+            header("Refresh: 0");
+        }
+        catch (PDOexception $e) {
+            echo $e->getMessage();
+        }
+    }
 }
 ?>
 
@@ -76,7 +98,8 @@ catch (PDOexception $e) {
             margin: 30px;
         }
         .queue-column {
-            flex: 1;
+            display: flex;
+            flex-direction: column;
             margin: 10px;
             padding: 20px;
             border-radius: 20px;
@@ -92,6 +115,7 @@ catch (PDOexception $e) {
         }
         .song-box {
             background-color: white;
+            text-align: left;
             padding: 15px;
             margin: 10px 0;
             border-radius: 10px;
@@ -100,6 +124,10 @@ catch (PDOexception $e) {
         .song-box p {
             margin: 5px 0;
         }
+
+        .form {
+            flex: 1;
+        }
     </style>
 </head>
 <body>
@@ -107,39 +135,59 @@ catch (PDOexception $e) {
 
     <div class="queue-wrapper">
         <!-- Priority Queue -->
+        <form method="POST" action="" class="form">
         <div class="queue-column">
-            <h2>Priority Queue</h2>
+        <h2>Priority Queue</h2>
             <?php if (!empty($priorityQueue)): ?>
                 <?php foreach ($priorityQueue as $entry): ?>
-                    <div class="song-box">
+                    <?php
+                    $timestamp = $entry['time_stamp'];
+                    $user_id = $entry['user_id'];
+                    $version = $entry['karaoke_file_id'];
+                    echo "
+                    <button type='submit' name='submit-queue'
+                    value='$timestamp,$user_id,$version' class='song-box'>";
+                    ?>
                         <p><strong>Username:</strong> <?= htmlspecialchars($entry['user_id']) ?></p>
                         <p><strong>Song:</strong> <?= htmlspecialchars($entry['song_title']) ?></p>
                         <p><strong>Karaoke Version:</strong> <?= htmlspecialchars($entry['version']) ?></p>
                         <p><strong>Submitted At:</strong> <?= htmlspecialchars($entry['time_stamp']) ?></p>
                         <p><strong>Payment:</strong> $<?= htmlspecialchars($entry['payment']) ?></p>
-                    </div>
+                    </button>
                 <?php endforeach; ?>
             <?php else: ?>
                 <p>No songs in the priority queue.</p>
             <?php endif; ?>
         </div>
+        </form>
+
 
         <!-- Regular Queue -->
+        <form method="POST" action="" class="form">
         <div class="queue-column">
-            <h2>Regular Queue</h2>
+        <h2>Regular Queue</h2>
             <?php if (!empty($regularQueue)): ?>
                 <?php foreach ($regularQueue as $entry): ?>
-                    <div class="song-box">
+                    <?php
+                    $timestamp = $entry['time_stamp'];
+                    $user_id = $entry['user_id'];
+                    $version = $entry['karaoke_file_id'];
+                    echo "
+                    <button type='submit' name='submit-queue'
+                    value='$timestamp,$user_id,$version' class='song-box'>";
+                    ?>
                         <p><strong>Username:</strong> <?= htmlspecialchars($entry['user_id']) ?></p>
                         <p><strong>Song:</strong> <?= htmlspecialchars($entry['song_title']) ?></p>
                         <p><strong>Karaoke Version:</strong> <?= htmlspecialchars($entry['version']) ?></p>
                         <p><strong>Submitted At:</strong> <?= htmlspecialchars($entry['time_stamp']) ?></p>
-                    </div>
+                    </button>
                 <?php endforeach; ?>
             <?php else: ?>
-                <p>No songs in the regular queue.</p>
+                <p>No songs in the priority queue.</p>
             <?php endif; ?>
         </div>
+        </form>
+
     </div>
 </body>
 </html>
