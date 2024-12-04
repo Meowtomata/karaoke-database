@@ -24,13 +24,12 @@ $pdo = setupPDO($username, $password, $dbname);
 // Fetch regular queue
 try {
     $regularQueue = $pdo->query("
-        SELECT qinfo.*, song.song_title, karaoke_file.version
-        FROM queue_info qinfo
-        JOIN song ON qinfo.song_id = song.song_id
-        JOIN karaoke_file ON song.song_id = karaoke_file.song_id
-        WHERE payment IS NULL;
-        ORDER BY qinfo.time_stamp ASC
-    ")->fetchAll(PDO::FETCH_ASSOC);
+        SELECT * FROM queue_info 
+        JOIN karaoke_file ON queue_info.karaoke_file_id = karaoke_file.file_id
+        JOIN song ON song.song_id = karaoke_file.song_id
+        WHERE payment IS NOT NULL;
+        ORDER BY queue_info.time_stamp ASC
+     ")->fetchAll(PDO::FETCH_ASSOC);
 }
 catch (PDOexception $e) {
     echo $e->getMessage();
@@ -39,12 +38,11 @@ catch (PDOexception $e) {
 // Fetch priority queue
 try {
     $priorityQueue = $pdo->query("
-        SELECT qinfo.*, song.song_title, karaoke_file.version
-        FROM queue_info qinfo
-        JOIN song ON qinfo.song_id = song.song_id
-        JOIN karaoke_file ON song.song_id = karaoke_file.song_id
+        SELECT * FROM queue_info 
+        JOIN karaoke_file ON queue_info.karaoke_file_id = karaoke_file.file_id
+        JOIN song ON song.song_id = karaoke_file.song_id
         WHERE payment IS NOT NULL;
-        ORDER BY qinfo.time_stamp ASC
+        ORDER BY queue_info.time_stamp ASC
     ")->fetchAll(PDO::FETCH_ASSOC);
 }
 catch (PDOexception $e) {
