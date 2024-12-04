@@ -1,4 +1,9 @@
 <?php
+    error_reporting(E_ALL);
+    ini_set('display_errors', 1);
+
+?>
+<?php
 include 'password.php';
 ?>
 
@@ -33,35 +38,32 @@ if (isset($_GET['search'])) {
     $searchQuery = $_GET['search'];
 
     $getSongsQuery = $pdo->prepare(
-        "SELECT s.song_title, sd.role_name, c.contributor_name
-     FROM song s
-     JOIN song_data sd ON s.song_id = sd.song_id
-     JOIN contributor c ON sd.contributor_name = c.contributor_name
-     WHERE LOWER(s.song_title) LIKE :search
-     OR LOWER(c.contributor_name) LIKE :search
-     ORDER BY s.song_title, sd.role_name"
+        "SELECT s.song_id, s.song_title, sd.role_name, c.contributor_name
+         FROM song s
+         JOIN song_data sd ON s.song_id = sd.song_id
+         JOIN contributor c ON sd.contributor_name = c.contributor_name
+         WHERE LOWER(s.song_title) LIKE :search
+         OR LOWER(c.contributor_name) LIKE :search
+         ORDER BY s.song_title, sd.role_name"
     );
-    $getSongsQuery->bindValue(':search', '%' . $searchQuery . '%');
+    $getSongsQuery->bindValue(':search', '%' . strtolower($searchQuery) . '%');  // Ensure lowercase comparison
     $getSongsQuery->execute();
 
-
     $songs = $getSongsQuery->fetchAll(PDO::FETCH_ASSOC);
-} else {
-    $getSongsQuery = $pdo->query(
-        "SELECT s.song_title, sd.role_name, c.contributor_name
-        FROM song s
-        JOIN song_data sd ON s.song_id = sd.song_id
-        JOIN contributor c ON sd.contributor_name = c.contributor_name
-        ORDER BY s.song_title, sd.role_name"
-    );
 
-    $songs = $getSongsQuery->fetchAll(PDO::FETCH_ASSOC);
-}
-
-if (isset($_GET['search'])) {
     header('Content-Type: application/json');
     echo json_encode($songs);
     exit();
+} else {
+    $getSongsQuery = $pdo->query(
+        "SELECT s.song_id, s.song_title, sd.role_name, c.contributor_name
+         FROM song s
+         JOIN song_data sd ON s.song_id = sd.song_id
+         JOIN contributor c ON sd.contributor_name = c.contributor_name
+         ORDER BY s.song_title, sd.role_name"
+    );
+
+    $songs = $getSongsQuery->fetchAll(PDO::FETCH_ASSOC);
 }
 ?>
 
@@ -134,17 +136,66 @@ if (isset($_GET['search'])) {
 <body>
 
 <?php
-    $showPayment = false;
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        if (isset($_POST['queuetype']) && $_POST['queuetype'] == 'priority') {
-            $showPayment = true;
+        $userID = $_POST['userID'] ?? '';
+        $song = $_POST['song'] ?? '';
+        $queuetype = $_POST['queuetype'] ?? 'queue';
+        $paymentAmount = isset($_POST['paymentAmount']) ? floatval($_POST['paymentAmount']) : 0;
+
+        if ($paymentAmount == 0 || empty($paymentAmount)) {
+            $queuetype = 'queue';
+        }
+
+        if ($queuetype === 'priority' && $paymentAmount < 5) {
+            $queuetype = 'queue';
+        }
+
+        if (empty($userID) || empty($song)) {
+            echo "<script>alert('Please provide a username and song choice.');</script>";
+        } else {
+            $checkSongQuery = $pdo->prepare("SELECT song_id FROM song WHERE song_id = :song_id");
+            $checkSongQuery->execute([':song_id' => $song]);
+
+            if ($checkSongQuery->rowCount() == 0) {
+                echo "<script>alert('Song ID does not exist!');</script>";
+            } else {
+                $timestamp = date('Y-m-d H:i:s');
+
+                if ($queuetype === 'priority' && $paymentAmount >= 5) {
+                    $insertIntoQueue = $pdo->prepare(
+                        "INSERT INTO queue_info(song_id, time_stamp, user_id, payment)
+                         VALUES (:song_id, :time_stamp, :user_id, :payment)"
+                    );
+                    $insertIntoQueue->execute([
+                        ':song_id' => (int)$song,
+                        ':time_stamp' => $timestamp,
+                        ':user_id' => $userID,
+                        ':payment' => $paymentAmount
+                    ]);
+                    $paymentDisplay = "$" . number_format($paymentAmount, 2); // Show actual payment for priority
+                } else {
+                    $insertIntoQueue = $pdo->prepare(
+                        "INSERT INTO queue_info (song_id, time_stamp, user_id)
+                         VALUES (:song_id, :time_stamp, :user_id)"
+                    );
+                    $insertIntoQueue->execute([
+                        ':song_id' => (int)$song,
+                        ':time_stamp' => $timestamp,
+                        ':user_id' => $userID
+                    ]);
+                    $paymentDisplay = "";
+                }
+                echo "<script>alert('Song added to the queue!');</script>";
+
+            }
         }
     }
+
 ?>
 
 <h1>Welcome to Karaoke</h1>
 
-<form method="POST" action="">
+<form id="karaokeForm" method="POST" action="">
     <label for="userID">Username: </label>
     <input type="text" id="userID" name="userID" placeholder="Enter a Username"><br><br>
 
@@ -152,21 +203,21 @@ if (isset($_GET['search'])) {
     <input type="text" id="word" oninput="searchSongs()" name="search" placeholder="Enter a Song or Artist"><br><br>
 
     <div id="results">
-        <h2>All Songs</h2>
-        <select id="songSelect" name="song">
-            <option value="" disabled selected>Select a song</option>
-            <?php foreach ($songs as $song): ?>
-                <option value="<?= htmlspecialchars($song['song_title'] . ": " . $song['role_name'] . " - " . $song['contributor_name']) ?>">
-                    <?= htmlspecialchars($song['song_title'] . ": " . $song['role_name'] . " - " . $song['contributor_name']) ?>
-                </option>
-            <?php endforeach; ?>
-        </select>
-    </div><br><br>
+    <h2>All Songs</h2>
+    <select name="song" id="songSelect">
+        <option value="">Select a song</option>
+        <?php foreach ($songs as $song): ?>
+            <option value="<?= htmlspecialchars($song['song_id']) ?>">
+                <?= htmlspecialchars($song['song_title'] . ": " . $song['role_name'] . " - " . $song['contributor_name']) ?>
+            </option>
+        <?php endforeach; ?>
+    </select>
+</div><br><br>
 
     <label>Queue Choice:</label><br>
     <div class="form-group">
         <input type="radio" id="queue" name="queuetype" value="queue"
-        <?php if (isset($_POST['queuetype']) && $_POST['queuetype'] == 'queue') echo 'checked'; ?>>
+        <?php if (isset($_POST['queuetype']) && $_POST['queuetype'] == 'queue' || !isset($_POST['queuetype'])) echo 'checked'; ?>>
         <label for="queue" style="display: inline;">Queue</label><br>
 
         <input type="radio" id="priorityqueue" name="queuetype" value="priority"
@@ -174,32 +225,9 @@ if (isset($_GET['search'])) {
         <label for="priorityqueue" style="display: inline;">Priority Queue</label>
     </div>
 
-    <?php if ($showPayment): ?>
-        <div id="paymentSection">
-            <h3>Payment Options</h3>
-            <label for="paymentAmount">Amount to Pay:</label>
-            <input type="text" id="paymentAmount" name="paymentAmount" placeholder="Enter amount"><br><br>
+    <label for="paymentAmount">Payment Amount (optional):</label>
+    <input type="text" id="paymentAmount" name="paymentAmount" placeholder="Enter amount"><br><br>
 
-            <label>Payment Method:</label><br>
-            <div class="form-group">
-                <input type="radio" id="card" name="paymentMethod" value="card" checked>
-                <label for="card" style="display: inline;">Debit/Credit Card</label><br>
-
-                <input type="radio" id="cash" name="paymentMethod" value="cash">
-                <label for="cash" style="display: inline;">Cash</label>
-            </div>
-            <div id="cardDetails">
-                <label for="cardNumber">Card Number:</label>
-                <input type="text" id="cardNumber" name="cardNumber"><br><br>
-
-                <label for="expirationDate">Expiration Date:</label>
-                <input type="text" id="expirationDate" name="expirationDate" placeholder="MM/YY"><br><br>
-
-                <label for="cvv">CVV Code:</label>
-                <input type="text" id="cvv" name="cvv"><br><br>
-            </div>
-        </div>
-    <?php endif; ?>
 
     <button type="submit">Submit</button>
 </form>
@@ -218,7 +246,7 @@ function searchSongs() {
                 if (songs.length > 0) {
                     songs.forEach(song => {
                         const option = document.createElement('option');
-                        option.value = `${song.song_title}: ${song.role_name} - ${song.contributor_name}`;
+                        option.value = song.song_id;
                         option.textContent = `${song.song_title}: ${song.role_name} - ${song.contributor_name}`;
                         songSelect.appendChild(option);
                     });
@@ -234,6 +262,9 @@ function searchSongs() {
             });
     }
 }
+
+
+
 </script>
 
 </body>
