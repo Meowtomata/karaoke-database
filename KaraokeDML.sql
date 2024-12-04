@@ -74,7 +74,7 @@ INSERT INTO song_data (song_id, role_name, contributor_name)
 (2, "Featured Artist", "SZA"),
 (3, "Artist, Writer", "Shaboozey"), -- A Bar Song(Tipsy)
 (4, "Artist, Writer", "Billie Eilish"), -- Birds Of A Feather
-(5, "Artist, Writer", "endrick Lamar"), -- Not Like Us
+(5, "Artist, Writer", "Kendrick Lamar"), -- Not Like Us
 (6, "Artist, Writer", "lefty gunplay"), -- tv off(feat. lefty gunplay)
 (7, "Artist, Writer", "Charles Berthoud"), -- Elevated
 (8, "Artist, Writer", "mobbu"), -- Rolled up
@@ -170,7 +170,7 @@ INSERT INTO queue_info (song_id, time_stamp, user_id, payment)
     (31, '2024-10-07 14:26:23', 'sleepyGuy', NULL),
     (15, '2024-10-07 16:14:13', 'Patrick', NULL),
     (9, '2024-11-03 11:15:45', 'Max Verstappen', 1000000),
-    (22,'2024-12-02 19:24:23' 'Sonic', NULL),
+    (22,'2024-12-02 19:24:23', 'Sonic', NULL),
     (26, '2024-12-03 14:26:23','Celica', NULL),
     (17, '2024-12-04 12:15:23', 'Supra', 20),
      (13, '2024-12-05 17:30:23', 'Rashid', 30);
