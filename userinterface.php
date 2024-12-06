@@ -41,7 +41,7 @@ if (isset($_GET['search'])) {
         FROM song s
         JOIN song_data sd ON s.song_id = sd.song_id
         JOIN contributor c ON sd.contributor_name = c.contributor_name
-        LEFT JOIN karaoke_file kf ON s.song_id = kf.song_id  -- Use LEFT JOIN to include songs without karaoke files
+        LEFT JOIN karaoke_file kf ON s.song_id = kf.song_id
         WHERE LOWER(s.song_title) LIKE :search
         OR LOWER(c.contributor_name) LIKE :search
         ORDER BY s.song_title, sd.role_name, kf.version"
@@ -55,6 +55,7 @@ if (isset($_GET['search'])) {
     echo json_encode($songs);
     exit();
 } else {
+
     $getSongsQuery = $pdo->query(
         "SELECT s.song_id, s.song_title, sd.role_name, c.contributor_name, kf.file_id, kf.version
          FROM song s
@@ -81,6 +82,11 @@ if (isset($_GET['search'])) {
              padding: 0;
          }
          h1{
+             background-color: #9fd8e3;
+             color: white;
+             text-align: center;
+         }
+         h3{
              background-color: #9fd8e3;
              color: white;
              text-align: center;
@@ -127,7 +133,26 @@ if (isset($_GET['search'])) {
         .form-group{
             margin-bottom: 20px;
         }
-
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+            border: 1px solid #ccc;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ccc;
+        }
+        th {
+            background-color: #9fd8e3;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        .sortable:hover {
+            cursor: pointer;
+        }
 
     </style>
 
@@ -226,7 +251,30 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     <button type="submit">Submit</button>
 </form>
+<br> <br>
 
+        <h3>Don't know what to look for? Look through our songs instead</h3>
+        <br>
+        <table id="songsTable">
+    <thead>
+        <tr>
+            <th class="sortable" onclick="sortTable(0)">Song Title</th>
+            <th class="sortable" onclick="sortTable(1)">Role</th>
+            <th class="sortable" onclick="sortTable(2)">Contributor</th>
+            <th class="sortable" onclick="sortTable(3)">Version</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php foreach ($songs as $song): ?>
+            <tr>
+                <td><?= htmlspecialchars($song['song_title']) ?></td>
+                <td><?= htmlspecialchars($song['role_name']) ?></td>
+                <td><?= htmlspecialchars($song['contributor_name']) ?></td>
+                <td><?= htmlspecialchars($song['version']) ?></td>
+            </tr>
+        <?php endforeach; ?>
+    </tbody>
+</table>
 <script>
 function searchSongs() {
     const searchQuery = document.getElementById('word').value.trim();
@@ -242,7 +290,7 @@ function searchSongs() {
                     songs.forEach(song => {
                         const option = document.createElement('option');
                         option.value = song.file_id;
-                        option.textContent = `${song.song_title}: ${song.role_name} - ${song.contributor_name}`;
+                        option.textContent = `${song.song_title}: ${song.role_name} - ${song.contributor_name} [${song.version}]`;
                         songSelect.appendChild(option);
                     });
                 } else {
@@ -264,3 +312,4 @@ function searchSongs() {
 
 </body>
 </html>
+
