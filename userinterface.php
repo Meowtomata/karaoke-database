@@ -258,10 +258,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <table id="songsTable">
     <thead>
         <tr>
-            <th class="sortable" onclick="sortTable(0)">Song Title</th>
-            <th class="sortable" onclick="sortTable(1)">Role</th>
-            <th class="sortable" onclick="sortTable(2)">Contributor</th>
-            <th class="sortable" onclick="sortTable(3)">Version</th>
+            <th>Song Title</th>
+            <th>Role</th>
+            <th>Contributor</th>
+            <th>Version</th>
         </tr>
     </thead>
     <tbody>
